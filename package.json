@@ -1,6 +1,6 @@
 {
-  "name": "skyfall-plugin-rocketchat",
-  "version": "0.1.0",
+  "name": "@mdbarr/skyfall-plugin-rocketchat",
+  "version": "0.1.1",
   "description": "Skyfall Rocket.Chat Messaging Plugin",
   "main": "index.js",
   "repository": "git@github.com:mdbarr/skyfall-plugin-rocketchat.git",
