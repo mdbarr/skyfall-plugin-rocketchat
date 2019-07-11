@@ -88,7 +88,7 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
-asteroid@rocketchat/asteroid:
+"asteroid@github:rocketchat/asteroid":
   version "0.6.1"
   resolved "https://codeload.github.com/rocketchat/asteroid/tar.gz/a76a53254e381f9487aa2a9be3d874c9a2df6552"
   dependencies:

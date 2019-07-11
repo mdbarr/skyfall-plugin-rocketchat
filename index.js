@@ -2,6 +2,14 @@
 
 const { driver } = require('@rocket.chat/sdk');
 
+driver.useLog({
+    debug: () => null,
+    info: () => null,
+    warn: () => null,
+    warning: () => null,
+    error: () => null
+});
+
 function RocketChat(skyfall) {
   this.connection = null;
 
@@ -64,7 +72,7 @@ function RocketChat(skyfall) {
               data: error,
               source: id
             });
-          } else if (message.u._id !== this.connection.username) {
+          } else if (message.u.username !== this.connection.username) {
             skyfall.events.emit({
               type: `rocketchat:${ name }:message`,
               data: message,
