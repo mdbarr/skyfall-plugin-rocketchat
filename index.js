@@ -3,11 +3,11 @@
 const { driver } = require('@rocket.chat/sdk');
 
 driver.useLog({
-    debug: () => null,
-    info: () => null,
-    warn: () => null,
-    warning: () => null,
-    error: () => null
+  debug: () => { return null; },
+  info: () => { return null; },
+  warn: () => { return null; },
+  warning: () => { return null; },
+  error: () => { return null; }
 });
 
 function RocketChat(skyfall) {
@@ -28,6 +28,7 @@ function RocketChat(skyfall) {
       host: options.host,
       secure: Boolean(options.secure),
       username: options.username,
+      userId: null,
       get connected() {
         return connected;
       }
@@ -53,7 +54,9 @@ function RocketChat(skyfall) {
           password: options.password
         });
       }).
-      then(() => {
+      then((userId) => {
+        this.connection.userId = userId;
+
         return driver.subscribeToMessages();
       }).
       then(() => {
@@ -72,13 +75,20 @@ function RocketChat(skyfall) {
               data: error,
               source: id
             });
-          } else if (message.u.username !== this.connection.username) {
+          } else if (message.u._id !== this.connection.userId) {
             skyfall.events.emit({
               type: `rocketchat:${ name }:message`,
               data: message,
               source: id
             });
           }
+        });
+      }).
+      catch((error) => {
+        skyfall.events.emit({
+          type: `rocketchat:${ name }:error`,
+          data: error,
+          source: id
         });
       });
   };
@@ -98,6 +108,13 @@ function RocketChat(skyfall) {
         then((roomId) => {
           const message = driver.prepareMessage(content, roomId);
           driver.sendMessage(message);
+        }).
+        catch((error) => {
+          skyfall.events.emit({
+            type: `rocketchat:${ this.connection.name }:error`,
+            data: error,
+            source: this.connection.id
+          });
         });
     }
   };
