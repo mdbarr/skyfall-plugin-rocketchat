@@ -78,7 +78,13 @@ function RocketChat(skyfall) {
           } else if (message.u._id !== this.connection.userId) {
             driver.getRoomName(message.rid).
               then((roomName) => {
-                message.roomName = roomName;
+                if (roomName) {
+                  message.roomName = `#${ roomName }`;
+                  message.direct = false;
+                } else {
+                  message.roomName = null;
+                  message.direct = true;
+                }
 
                 skyfall.events.emit({
                   type: `rocketchat:${ name }:message`,
@@ -113,6 +119,8 @@ function RocketChat(skyfall) {
         let getRoomId;
         if (to.startsWith('@')) {
           getRoomId = driver.getDirectMessageRoomId(to.substring(1));
+        } else if (to.startsWith('#')) {
+          getRoomId = driver.getRoomId(to.substring(1));
         } else {
           getRoomId = driver.getRoomId(to);
         }
