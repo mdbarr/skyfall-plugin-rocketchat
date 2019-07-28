@@ -11,7 +11,7 @@
     "@rocket.chat/sdk": "^0.2.9-2"
   },
   "devDependencies": {
-    "eslint": "^6.0.1"
+    "eslint": "^6.1.0"
   },
   "scripts": {
     "lint": "eslint index.js"
