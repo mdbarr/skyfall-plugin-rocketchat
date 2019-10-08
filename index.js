@@ -191,10 +191,19 @@ function RocketChat(skyfall) {
         let getRoomId;
         if (to.startsWith('@')) {
           getRoomId = driver.getDirectMessageRoomId(to.substring(1));
-        } else if (to.startsWith('#')) {
-          getRoomId = driver.getRoomId(to.substring(1));
         } else {
-          getRoomId = driver.getRoomId(to);
+          const room = to.startsWith('#') ? to.substring(1) : to;
+
+          getRoomId = driver.getRoomId(room).
+            then((roomId) => {
+              if (this.connection.autoJoin && !this.channels.has(room)) {
+                return this.join(room).
+                  then(() => {
+                    return roomId;
+                  });
+              }
+              return roomId;
+            });
         }
 
         getRoomId.
