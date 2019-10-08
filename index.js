@@ -13,6 +13,8 @@ driver.useLog({
 function RocketChat(skyfall) {
   this.connection = null;
 
+  this.channels = new Set([ 'general' ]);
+
   this.connect = (options) => {
     if (this.connection) {
       return this.connection;
@@ -22,6 +24,14 @@ function RocketChat(skyfall) {
     const name = options.username || options.host;
     let connected = false;
 
+    if (options.channels) {
+      if (Array.isArray(options.channels)) {
+        this.channels = new Set(options.channels);
+      } else {
+        this.channels.add(this.channels);
+      }
+    }
+
     this.connection = {
       id,
       name,
@@ -29,8 +39,13 @@ function RocketChat(skyfall) {
       secure: Boolean(options.secure),
       username: options.username,
       userId: null,
-      get connected() {
+      autoJoin: options.autoJoin !== undefined ? options.autoJoin : true,
+      filter: options.filter !== undefined ? options.filter : true,
+      get connected () {
         return connected;
+      },
+      get channels () {
+        return Array.from(this.channels);
       }
     };
 
@@ -56,7 +71,9 @@ function RocketChat(skyfall) {
       }).
       then((userId) => {
         this.connection.userId = userId;
-
+        return driver.joinRooms(Array.from(this.channels));
+      }).
+      then(() => {
         return driver.subscribeToMessages();
       }).
       then(() => {
@@ -109,6 +126,61 @@ function RocketChat(skyfall) {
           source: id
         });
       });
+  };
+
+  this.join = function(channel, ...channels) {
+    if (Array.isArray(channel)) {
+      channels.push(...channel);
+    } else {
+      channels.push(channel);
+    }
+
+    if (channels.length === 1) {
+      return driver.joinRoom(channels[0]).
+        then(() => {
+          channels.forEach((chan) => { return this.channels.add(chan); });
+
+          skyfall.events.emit({
+            type: `rocketchat:${ this.connection.name }:joined`,
+            data: { channel: channels[0] },
+            source: this.connection.id
+          });
+        });
+    }
+    return driver.joinRooms(channels).
+      then(() => {
+        skyfall.events.emit({
+          type: `rocketchat:${ this.connection.name }:joined`,
+          data: { channels },
+          source: this.connection.id
+        });
+      });
+  };
+
+  this.part = function(channel, ...channels) {
+    if (Array.isArray(channel)) {
+      channels.push(...channel);
+    } else {
+      channels.push(channel);
+    }
+
+    let chain = Promise.resolve();
+    channels.forEach((chan) => {
+      chain = chain.then(() => {
+        return driver.leaveRoom(chan).
+          then(() => {
+            this.channels.delete(chan);
+
+            skyfall.events.emit({
+              type: `rocketchat:${ this.connection.name }:parted`,
+              data: { channel: chan },
+              source: this.connection.id
+            });
+          });
+      });
+    });
+
+    return chain;
   };
 
   this.send = function({
