@@ -3,14 +3,14 @@
 const { driver } = require('@rocket.chat/sdk');
 
 driver.useLog({
-  debug: () => { return null; },
-  info: () => { return null; },
-  warn: () => { return null; },
-  warning: () => { return null; },
-  error: () => { return null; }
+  debug: () => null,
+  info: () => null,
+  warn: () => null,
+  warning: () => null,
+  error: () => null,
 });
 
-function RocketChat(skyfall) {
+function RocketChat (skyfall) {
   this.connection = null;
 
   this.connect = (options) => {
@@ -42,13 +42,13 @@ function RocketChat(skyfall) {
       channels,
       get connected () {
         return connected;
-      }
+      },
     };
 
     skyfall.events.emit({
       type: `rocketchat:${ name }:connecting`,
       data: this.connection,
-      source: id
+      source: id,
     });
 
     skyfall.events.on(`rocketchat:${ name }:send`, (event) => {
@@ -57,28 +57,24 @@ function RocketChat(skyfall) {
 
     return driver.connect({
       host: this.connection.host,
-      useSsl: this.connection.secure
+      useSsl: this.connection.secure,
     }).
-      then(() => {
-        return driver.login({
-          username: this.connection.username,
-          password: options.password
-        });
-      }).
+      then(() => driver.login({
+        username: this.connection.username,
+        password: options.password,
+      })).
       then((userId) => {
         this.connection.userId = userId;
         return driver.joinRooms(Array.from(this.connection.channels));
       }).
-      then(() => {
-        return driver.subscribeToMessages();
-      }).
+      then(() => driver.subscribeToMessages()).
       then(() => {
         connected = true;
 
         skyfall.events.emit({
           type: `rocketchat:${ name }:connected`,
           data: this.connection,
-          source: id
+          source: id,
         });
 
         return driver.reactToMessages((error, message) => {
@@ -86,7 +82,7 @@ function RocketChat(skyfall) {
             skyfall.events.emit({
               type: `rocketchat:${ name }:error`,
               data: error,
-              source: id
+              source: id,
             });
           } else if (message.u._id !== this.connection.userId) {
             driver.getRoomName(message.rid).
@@ -108,14 +104,14 @@ function RocketChat(skyfall) {
                 skyfall.events.emit({
                   type: `rocketchat:${ name }:message`,
                   data: message,
-                  source: id
+                  source: id,
                 });
               }).
               catch((error) => {
                 skyfall.events.emit({
                   type: `rocketchat:${ name }:error`,
                   data: error,
-                  source: id
+                  source: id,
                 });
               });
           }
@@ -125,7 +121,7 @@ function RocketChat(skyfall) {
         skyfall.events.emit({
           type: `rocketchat:${ name }:error`,
           data: error,
-          source: id
+          source: id,
         });
       });
   };
@@ -140,12 +136,12 @@ function RocketChat(skyfall) {
     if (channels.length === 1) {
       return driver.joinRoom(channels[0]).
         then(() => {
-          channels.forEach((chan) => { return this.connection.channels.add(chan.toLowerCase()); });
+          channels.forEach((chan) => this.connection.channels.add(chan.toLowerCase()));
 
           skyfall.events.emit({
             type: `rocketchat:${ this.connection.name }:joined`,
             data: { channel: channels[0] },
-            source: this.connection.id
+            source: this.connection.id,
           });
         });
     }
@@ -154,7 +150,7 @@ function RocketChat(skyfall) {
         skyfall.events.emit({
           type: `rocketchat:${ this.connection.name }:joined`,
           data: { channels },
-          source: this.connection.id
+          source: this.connection.id,
         });
       });
   };
@@ -168,26 +164,22 @@ function RocketChat(skyfall) {
 
     let chain = Promise.resolve();
     channels.forEach((chan) => {
-      chain = chain.then(() => {
-        return driver.leaveRoom(chan).
-          then(() => {
-            this.connection.channels.delete(chan.toLowerCase());
+      chain = chain.then(() => driver.leaveRoom(chan).
+        then(() => {
+          this.connection.channels.delete(chan.toLowerCase());
 
-            skyfall.events.emit({
-              type: `rocketchat:${ this.connection.name }:parted`,
-              data: { channel: chan },
-              source: this.connection.id
-            });
+          skyfall.events.emit({
+            type: `rocketchat:${ this.connection.name }:parted`,
+            data: { channel: chan },
+            source: this.connection.id,
           });
-      });
+        }));
     });
 
     return chain;
   };
 
-  this.send = function({
-    to, content
-  }) {
+  this.send = function({ to, content }) {
     if (this.connection && this.connection.connected) {
       if (to && content) {
         let getRoomId;
@@ -200,9 +192,7 @@ function RocketChat(skyfall) {
             then((roomId) => {
               if (this.connection.autoJoin && !this.connection.channels.has(room.toLowerCase())) {
                 return this.join(room).
-                  then(() => {
-                    return roomId;
-                  });
+                  then(() => roomId);
               }
               return roomId;
             });
@@ -217,21 +207,21 @@ function RocketChat(skyfall) {
             skyfall.events.emit({
               type: `rocketchat:${ this.connection.name }:error`,
               data: error,
-              source: this.connection.id
+              source: this.connection.id,
             });
           });
       } else {
         skyfall.events.emit({
           type: `rocketchat:${ this.connection.name }:error`,
           data: new Error('messages must include to and content'),
-          source: this.connection.id
+          source: this.connection.id,
         });
       }
     } else {
       skyfall.events.emit({
         type: `rocketchat:${ this.connection.name }:error`,
         data: new Error('not connected'),
-        source: this.connection.id
+        source: this.connection.id,
       });
     }
   };
@@ -241,5 +231,5 @@ module.exports = {
   name: 'rocketchat',
   install: (skyfall, options) => {
     skyfall.rocketchat = new RocketChat(skyfall, options);
-  }
+  },
 };
