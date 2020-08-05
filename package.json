@@ -1,5 +1,5 @@
 {
-  "name": "@mdbarr/skyfall-plugin-rocketchat",
+  "name": "@hyperingenuity/skyfall-plugin-rocketchat",
   "version": "0.2.1",
   "description": "Skyfall Rocket.Chat Messaging Plugin",
   "main": "index.js",
