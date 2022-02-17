@@ -77,8 +77,7 @@ function RocketChat (skyfall) {
           source: id,
         });
 
-        return driver.reactToMessages((error, messages) => {
-          message = messages[0]
+        return driver.reactToMessages((error, message) => {
           if (error) {
             skyfall.events.emit({
               type: `rocketchat:${ name }:error`,
